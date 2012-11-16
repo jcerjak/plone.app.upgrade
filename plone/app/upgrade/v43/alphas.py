@@ -220,3 +220,12 @@ def removeKSS(context):
 def upgradeTinyMCEAgain(context):
     qi = getToolByName(context, 'portal_quickinstaller')
     qi.upgradeProduct('Products.TinyMCE')
+
+
+def remove3rdPartyEcmascript(context):
+    """plip #12453"""
+    qi = getToolByName(context, 'portal_quickinstaller')
+    qi.upgradeProduct('plone.app.sarissa')
+    qi.upgradeProduct('plone.app.s5slideshow')
+    qi.upgradeProduct('plone.app.modernizr')
+    qi.upgradeProduct('plone.app.jscalendar')

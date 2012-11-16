@@ -21,4 +21,13 @@
       provides="Products.GenericSetup.interfaces.EXTENSION"
       />
 
+  <genericsetup:registerProfile
+      name="to43alphaX"
+      title="Upgrade profile for Plone 4.2.x to Plone 4.3alphaX"
+      description=""
+      directory="profiles/to_alphaX"
+      for="Products.CMFPlone.interfaces.IMigratingPloneSiteRoot"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
 </configure>
