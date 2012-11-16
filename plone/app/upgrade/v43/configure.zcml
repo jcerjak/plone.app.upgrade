@@ -56,4 +56,17 @@
 
     </genericsetup:upgradeSteps>
 
+    <genericsetup:upgradeSteps
+        source="4302"
+        destination="4303"
+        profile="Products.CMFPlone:plone">
+
+        <genericsetup:upgradeStep
+            title="move 3rdPartyEcmascript"
+            description="Use new packages for each 3rd party ecmascripts"
+            handler=".alphas.remove3rdPartyEcmascript"
+            />
+
+    </genericsetup:upgradeSteps>
+
 </configure>

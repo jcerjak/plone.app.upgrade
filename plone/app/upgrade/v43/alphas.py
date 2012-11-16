@@ -225,7 +225,10 @@ def upgradeTinyMCEAgain(context):
 def remove3rdPartyEcmascript(context):
     """plip #12453"""
     qi = getToolByName(context, 'portal_quickinstaller')
-    qi.upgradeProduct('plone.app.sarissa')
-    qi.upgradeProduct('plone.app.s5slideshow')
-    qi.upgradeProduct('plone.app.modernizr')
-    qi.upgradeProduct('plone.app.jscalendar')
+    for addon in ('plone.app.sarissa',
+                  'plone.app.modernizr',
+                  'plone.app.jscalendar'):
+        if not qi.isProductInstalled(addon):
+            logger.info('install %s' % addon)
+            qi.installProduct(addon)
+
