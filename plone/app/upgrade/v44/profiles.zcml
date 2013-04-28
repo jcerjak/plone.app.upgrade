@@ -1,0 +1,12 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    i18n_domain="plone">
+
+  <genericsetup:registerProfile
+      name="to43alphaX"
+      title="Upgrade profile for Plone 4.3 to Plone 4.4alpha1"
+      description=""
+      directory="profiles/to_alpha1"
+      />
+</configure>

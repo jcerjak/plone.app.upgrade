@@ -105,7 +105,6 @@ def to43alpha1(context):
     """4.2 -> 4.3alpha1"""
     loadMigrationProfile(context, 'profile-plone.app.upgrade.v43:to43alpha1')
     reindex_sortable_title(context)
-    upgradeToI18NCaseNormalizer(context)
     upgradeTinyMCE(context)
     upgradePloneAppTheming(context)
     # XXX only for plone.app.jquery 1.7
@@ -136,7 +135,7 @@ def upgradeSyndication(context):
 
         ftypes = set([])
         for _type in types:
-            klass = resolveDottedName(fti.klass)
+            klass = resolveDottedName(_type.klass)
             if ISyndicatable.implementedBy(klass):
                 ftypes.add(_type.getId())
         return ftypes
@@ -198,9 +197,8 @@ def removeKSS(context):
         layers = selections[skin_name].split(',')
         if 'plone_kss' in layers:
             layers.remove('plone_kss')
-        # XXX remove this once achetypes inline editing is implemented
-        #if 'archetypes_kss' in layers:
-        #    layers.remove('archetypes_kss')
+        if 'archetypes_kss' in layers:
+            layers.remove('archetypes_kss')
         skinstool.addSkinSelection(skin_name, ','.join(layers))
 
     # remove portal_kss tool
@@ -220,15 +218,3 @@ def removeKSS(context):
 def upgradeTinyMCEAgain(context):
     qi = getToolByName(context, 'portal_quickinstaller')
     qi.upgradeProduct('Products.TinyMCE')
-
-
-def remove3rdPartyEcmascript(context):
-    """plip #12453"""
-    qi = getToolByName(context, 'portal_quickinstaller')
-    for addon in ('plone.app.sarissa',
-                  'plone.app.modernizr',
-                  'plone.app.jscalendar'):
-        if not qi.isProductInstalled(addon):
-            logger.info('install %s' % addon)
-            qi.installProduct(addon)
-

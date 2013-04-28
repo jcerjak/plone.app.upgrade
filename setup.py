@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '1.3b1.dev0'
+version = '1.3.2.dev0'
 
 setup(name='plone.app.upgrade',
       version=version,
@@ -55,7 +55,6 @@ setup(name='plone.app.upgrade',
         'Acquisition',
         'Products.CMFPlone',
         'Products.Archetypes',
-        'Products.ATContentTypes',
         'Products.contentmigration',
         'Products.CMFActionIcons',
         'Products.CMFCalendar',

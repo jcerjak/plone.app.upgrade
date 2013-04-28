@@ -62,9 +62,41 @@
         profile="Products.CMFPlone:plone">
 
         <genericsetup:upgradeStep
-            title="move 3rdPartyEcmascript"
-            description="Use new packages for each 3rd party ecmascripts"
-            handler=".alphas.remove3rdPartyEcmascript"
+            title="Upgrade plone.app.discussion"
+            description="Update tinymce to let integrator add email field"
+            handler=".betas.to43beta2"
+            />
+
+        <genericsetup:upgradeStep
+            title="Upgrade plonetheme.sunburst"
+            description="Recook plonetheme.sunburst css to use new @group hints"
+            handler=".betas.upgradeSunburst"
+            />
+
+    </genericsetup:upgradeSteps>
+
+    <genericsetup:upgradeSteps
+        source="4303"
+        destination="4304"
+        profile="Products.CMFPlone:plone">
+
+        <genericsetup:upgradeStep
+            title="Upgrade plone lexicon"
+            description="Upgrade plone lexicon using I18N Case normalizer"
+            handler=".betas.to43rc1"
+            />
+
+    </genericsetup:upgradeSteps>
+
+    <genericsetup:upgradeSteps
+        source="4304"
+        destination="4305"
+        profile="Products.CMFPlone:plone">
+
+        <genericsetup:upgradeStep
+            title="Miscellaneous"
+            description=""
+            handler="..utils.null_upgrade_step"
             />
 
     </genericsetup:upgradeSteps>

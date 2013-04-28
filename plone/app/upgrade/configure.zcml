@@ -1,6 +1,7 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
     xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
     i18n_domain="plone">
 
     <include package=".v25" />
@@ -12,6 +13,7 @@
     <include package=".v41" />
     <include package=".v42" />
     <include package=".v43" />
+    <include package=".v44" zcml:condition="have plone-44" />
 
     <utility
         factory=".HiddenProducts"
