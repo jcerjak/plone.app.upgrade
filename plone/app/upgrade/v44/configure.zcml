@@ -7,14 +7,14 @@
     <include file="profiles.zcml" />
 
     <genericsetup:upgradeSteps
-        source="4304"
+        source="*"
         destination="4400"
         profile="Products.CMFPlone:plone">
 
         <genericsetup:upgradeStep
-            title="Miscellaneous"
+            title="to 4.4 alpha 1"
             description=""
-            handler="..utils.null_upgrade_step"
+            handler=".alphas.to44alpha1"
             />
 
     </genericsetup:upgradeSteps>
