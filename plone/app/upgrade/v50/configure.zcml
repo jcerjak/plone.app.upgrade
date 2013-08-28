@@ -14,7 +14,7 @@
         <genericsetup:upgradeStep
             title="Miscellaneous"
             description=""
-            handler="..utils.null_upgrade_step"
+            andler=".alphas.misc"
             />
 
     </genericsetup:upgradeSteps>
