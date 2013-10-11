@@ -37,6 +37,7 @@ setup(name='plone.app.upgrade',
             'plone.app.viewletmanager',
             'plone.app.theming',
             'plonetheme.sunburst',
+            'unittest2',
         ]
       ),
       install_requires=[

@@ -9,6 +9,8 @@ from plone.app.upgrade.v25 import fixupPloneLexicon
 from plone.app.upgrade.v25 import setLoginFormInCookieAuth
 from plone.app.upgrade.v25 import addMissingMimeTypes
 
+import unittest2 as unittest
+
 
 class TestMigrations_v2_5_0(MigrationTest):
 
@@ -122,6 +124,7 @@ class TestMigrations_v2_5_2(MigrationTest):
 
 class TestFunctionalMigrations(FunctionalUpgradeTestCase):
 
+    @unittest.skip("")
     def testUpgrade(self):
         self.importFile(__file__, 'test-base.zexp')
         oldsite, result = self.migrate()
@@ -133,6 +136,7 @@ class TestFunctionalMigrations(FunctionalUpgradeTestCase):
         len_diff = len(diff.split('\n'))
         # self.assertTrue(len_diff <= 2800)
 
+    @unittest.skip("")
     def testDCMIStorageUpdated(self):
         self.importFile(__file__, 'test-base.zexp')
         oldsite, result = self.migrate()

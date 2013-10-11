@@ -114,6 +114,9 @@ from plone.app.upgrade.v30.betas import hidePropertiesAction
 from plone.app.upgrade.v30.rcs import addIntelligentText
 
 from plone.app.upgrade.v30.final_three0x import installNewModifiers
+import unittest2 as unittest
+
+import pkg_resources
 
 try:
     from Products.ATContentTypes.interface import IATCTTool
@@ -121,8 +124,11 @@ try:
 except ImportError:
     HAS_ATCT = False
 
+PLONE_5 = pkg_resources.get_distribution('Products.CMFPlone').version >= '5.0a1'
+
 
 class TestMigrations_v3_0_Actions(MigrationTest):
+
 
     def afterSetUp(self):
         self.actions = self.portal.portal_actions
@@ -139,10 +145,11 @@ class TestMigrations_v3_0_Actions(MigrationTest):
             visible=True,
             action='context/reply'
         )
+
+    @unittest.skipIf(PLONE_5, "Do not run those tests on Plone 5.")
+    def testMigrateActions(self):
         self.discussion = self.portal.portal_discussion
         self.discussion._actions = (self.reply, )
-
-    def testMigrateActions(self):
         self.assertEqual(self.discussion._actions, (self.reply, ))
 
         # Test it twice
@@ -164,6 +171,13 @@ class TestMigrations_v3_0_Actions(MigrationTest):
             # Make sure the original action has been removed
             self.assertEqual(len(self.discussion._actions), 0)
 
+        # XXX: This is ugly as hell, but we have to tear down stuff and we
+        # can not do this on the tearDown method because we have to run the
+        # tests conditionally.
+        if len(self.discussion._actions) > 0:
+            self.discussion._actions = ()
+
+    @unittest.skipIf(PLONE_5, "Do not run those tests on Plone 5.")
     def testUpdateActionsI18NDomain(self):
         migrateOldActions(self.portal)
         reply = self.actions.reply_actions.reply
@@ -173,6 +187,7 @@ class TestMigrations_v3_0_Actions(MigrationTest):
             updateActionsI18NDomain(self.portal)
             self.assertEqual(reply.i18n_domain, 'plone')
 
+    @unittest.skipIf(PLONE_5, "Do not run those tests on Plone 5.")
     def testUpdateActionsI18NDomainNonAscii(self):
         migrateOldActions(self.portal)
         reply = self.actions.reply_actions.reply
@@ -209,9 +224,6 @@ class TestMigrations_v3_0_Actions(MigrationTest):
             hidePropertiesAction(self.portal)
             self.assertTrue(ti.getActionObject("object/metadata") is None)
 
-    def beforeTearDown(self):
-        if len(self.discussion._actions) > 0:
-            self.discussion._actions = ()
 
 
 class TestMigrations_v2_5_x(MigrationTest):
@@ -480,7 +492,7 @@ class TestMigrations_v2_5_x(MigrationTest):
                       IMetadataTool, IPropertiesTool, IUndoTool, IMailHost,
                       IUniqueIdAnnotationManagement, IUniqueIdGenerator,
                       IDiffTool, IMimetypesRegistryTool,
-                      IPortalTransformsTool, IDiscussionTool, )
+                      IPortalTransformsTool, )
         if HAS_ATCT:
             interfaces += (IATCTTool,)
         for i in interfaces:
@@ -1149,6 +1161,7 @@ class TestMigrations_v3_0(MigrationTest):
 
 class TestFunctionalMigrations(FunctionalUpgradeTestCase):
 
+    @unittest.skipIf(PLONE_5, "Do not run those tests on Plone 5.")
     def testBaseUpgrade(self):
         self.importFile(__file__, 'test-base.zexp')
         oldsite, result = self.migrate()
@@ -1160,6 +1173,7 @@ class TestFunctionalMigrations(FunctionalUpgradeTestCase):
         len_diff = len(diff.split('\n'))
         # self.assertTrue(len_diff <= 2300)
 
+    @unittest.skipIf(PLONE_5, "Do not run those tests on Plone 5.")
     def testFullUpgrade(self):
         self.importFile(__file__, 'test-full.zexp')
         oldsite, result = self.migrate()

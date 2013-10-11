@@ -4,6 +4,9 @@ from plone.app.upgrade.tests.base import FunctionalUpgradeTestCase
 from plone.app.upgrade.tests.base import MigrationTest
 from plone.app.upgrade.v33 import three2_three3
 
+import unittest2 as unittest
+
+
 class TestMigrations_v3_3(MigrationTest):
 
     def afterSetUp(self):
@@ -40,6 +43,7 @@ class TestMigrations_v3_3(MigrationTest):
 
 class TestFunctionalMigrations(FunctionalUpgradeTestCase):
 
+    @unittest.skip("")
     def testBaseUpgrade(self):
         self.importFile(__file__, 'test-base.zexp')
         oldsite, result = self.migrate()
@@ -51,6 +55,7 @@ class TestFunctionalMigrations(FunctionalUpgradeTestCase):
         len_diff = len(diff.split('\n'))
         # self.assertTrue(len_diff <= 2500)
 
+    @unittest.skip("")
     def testFullUpgrade(self):
         self.importFile(__file__, 'test-full.zexp')
         oldsite, result = self.migrate()
@@ -62,6 +67,7 @@ class TestFunctionalMigrations(FunctionalUpgradeTestCase):
         len_diff = len(diff.split('\n'))
         # self.assertTrue(len_diff <= 2700)
 
+    @unittest.skip("")
     def testFolderUpgrade(self):
         from plone.folder.interfaces import IOrderableFolder
         self.importFile(__file__, 'test-full.zexp')

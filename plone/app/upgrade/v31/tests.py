@@ -8,6 +8,8 @@ from plone.app.upgrade.tests.base import MigrationTest
 
 from plone.app.upgrade.v31.betas import reinstallCMFPlacefulWorkflow
 
+import unittest2 as unittest
+
 
 class TestMigrations_v3_1(MigrationTest):
 
@@ -93,8 +95,10 @@ class TestMigrations_v3_1(MigrationTest):
         # Delete the user folder
         replace_local_role_manager(self.portal)
 
+
 class TestFunctionalMigrations(FunctionalUpgradeTestCase):
 
+    @unittest.skip("")
     def testBaseUpgrade(self):
         self.importFile(__file__, 'test-base.zexp')
         oldsite, result = self.migrate()
@@ -106,6 +110,7 @@ class TestFunctionalMigrations(FunctionalUpgradeTestCase):
         len_diff = len(diff.split('\n'))
         # self.assertTrue(len_diff <= 2600)
 
+    @unittest.skip("")
     def testFullUpgrade(self):
         self.importFile(__file__, 'test-full.zexp')
         oldsite, result = self.migrate()
