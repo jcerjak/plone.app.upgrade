@@ -1,4 +1,5 @@
 import logging
+from Acquisition import aq_inner
 from plone.registry.interfaces import IRegistry
 from zope.component import queryUtility
 from zope.component import getUtility
@@ -12,6 +13,7 @@ from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.interfaces import IEditingSchema
 from plone.app.controlpanel.interfaces import IFilterTagsSchema
 from plone.app.controlpanel.bbb.filter import XHTML_TAGS
+from plone.app.controlpanel.interfaces import ILanguageSchema
 
 logger = logging.getLogger('plone.app.upgrade')
 
@@ -84,8 +86,10 @@ def editing_properties_to_registry(context):
     if siteProps.default_editor in available_editors:
         settings.default_editor = siteProps.default_editor
     else:
-        #keep the defaul_edior set in the schema
-        pass
+        logger.info("The default editor has been changed to %s as the old "
+                    "setting %s is no longer available." % 
+                    (settings.default_editor, siteProps.default_editor))
+
     settings.lock_on_ttw_edit = siteProps.lock_on_ttw_edit
 
 
@@ -108,3 +112,23 @@ def filter_tag_properties_to_registry(context):
     settings.nasty_tags = sorted_nasty
     settings.stripped_tags = sorted_stripped
     settings.custom_tags = sorted_custom
+
+def portal_languages_to_registry(context):
+    """"""
+    ltool = aq_inner(getToolByName(context,'portal_languages'))
+
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(ILanguageSchema)
+    settings = registry.forInterface(ILanguageSchema)
+
+    retrieved_language = ltool.getDefaultLanguage()
+    factory = getUtility(IVocabularyFactory, 'plone.app.vocabularies.AvailableContentLanguages')
+    available_languages = factory(context)
+
+    if retrieved_language in available_languages:
+        settings.default_language = retrieved_language
+    else:
+        logger.info("The default language was set to %s as the current value "
+                    "in portal_languages is no longer available" % 
+                    (settings.default_language, retrieved_language))
+    settings.use_combined_language_codes = ltool.use_combined_language_codes

@@ -1,3 +1,5 @@
+from Acquisition import aq_inner
+
 from Products.CMFCore.utils import getToolByName
 
 from plone.app.upgrade.tests.base import MigrationTest
@@ -12,6 +14,7 @@ from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.interfaces import IEditingSchema
 from plone.app.controlpanel.interfaces import IFilterTagsSchema
 from plone.app.controlpanel.bbb.filter import XHTML_TAGS
+from plone.app.controlpanel.interfaces import ILanguageSchema
 
 
 class PASUpgradeTest(MigrationTest):
@@ -109,3 +112,18 @@ class PASUpgradeTest(MigrationTest):
         self.assertEqual(settings.nasty_tags, sorted_nasty)
         self.assertEqual(settings.stripped_tags, sorted_stripped)
         self.assertEqual(settings.custom_tags, sorted_custom)
+            
+    def test_portal_languages_to_registry(self):
+
+        ltool = aq_inner(getToolByName(self.portal,'portal_languages'))
+        registry = queryUtility(IRegistry)
+        registry.registerInterface(ILanguageSchema)
+        settings = registry.forInterface(ILanguageSchema)
+
+        self.assertEqual(settings.use_combined_language_codes, ltool.use_combined_language_codes)
+        factory = getUtility(IVocabularyFactory,'plone.app.vocabularies.AvailableContentLanguages')
+        available_content_languages = factory(self.portal)
+        if ltool.getDefaultLanguage() in available_content_languages:
+            self.assertEqual(settings.default_language, ltool.getDefaultLanguage())
+        else:
+            self.assertTrue(settings.default_language in available_content_languages)

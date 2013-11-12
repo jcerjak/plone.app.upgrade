@@ -46,6 +46,12 @@
           title="filter_tag properties to portal_registry"
           description="Move configuration from filter_tag portal_properties to portal_registry."
           handler=".alphas.filter_tag_properties_to_registry"
+
+      <gs:upgradeStep
+          title="portal_languages settings to portal_registry"
+          description="Move configuration from portal_languages to portal_registry."
+          handler=".alphas.portal_languages_to_registry"
           />
+
     </gs:upgradeSteps>
 </configure>
