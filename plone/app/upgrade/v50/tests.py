@@ -5,6 +5,9 @@ from plone.app.upgrade.tests.base import MigrationTest
 import alphas
 from plone.registry.interfaces import IRegistry
 from zope.component import queryUtility
+from zope.component import getUtility
+from zope.schema.interfaces import IVocabularyFactory
+
 from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.interfaces import IEditingSchema
 
@@ -68,7 +71,7 @@ class PASUpgradeTest(MigrationTest):
         self.assertTrue(not settings.show_excluded_items)
 
 
-    def test_editing_properties_to_registry(self)
+    def test_editing_properties_to_registry(self):
 
         portal_setup = getToolByName(self.portal, 'portal_setup')
         portal_setup.runAllImportStepsFromProfile('profile-plone.app.controlpanel:default')
@@ -80,8 +83,16 @@ class PASUpgradeTest(MigrationTest):
         alphas.navigation_properties_to_registry(self.portal)
         settings = registry.forInterface(IEditingSchema)
         
-        for v in ('visible_ids', 'enable_link_integrity_checks', \
-                  'ext_editor', 'default_editor', 'lock_on_ttw_edit'):  
-            self.assertEqual(settings[v], siteProps[v])
+        self.assertEqual(settings.visible_ids ,siteProps.visible_ids)
+        self.assertEqual(settings.enable_link_integrity_checks, siteProps.enable_link_integrity_checks)
+        self.assertEqual(settings.ext_editor, siteProps.ext_editor)
+        self.assertEqual(settings.lock_on_ttw_edit, siteProps.lock_on_ttw_edit)
         
-        
+        factory = getUtility(IVocabularyFactory,'plone.app.vocabularies.AvailableEditors')
+        available_editors = factory(self.portal)
+        if siteProps.default_editor in available_editors:
+            self.assertEqual(settings.default_editor, siteProps.default_editor)
+        else:
+            self.assertTrue(settings.default_editor in available_editors)
+            
+            

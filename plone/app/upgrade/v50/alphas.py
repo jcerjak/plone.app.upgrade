@@ -1,6 +1,10 @@
 import logging
 from plone.registry.interfaces import IRegistry
 from zope.component import queryUtility
+from zope.component import getUtility
+
+from zope.schema.interfaces import IVocabularyFactory
+
 from Products.CMFCore.utils import getToolByName
 
 from plone.app.upgrade.utils import loadMigrationProfile
@@ -45,7 +49,6 @@ def navigation_properties_to_registry(context):
 
     registry = queryUtility(IRegistry)
     registry.registerInterface(INavigationSchema)
-    registry.registerInterface(IEditingSchema)
     settings = registry.forInterface(INavigationSchema)
     settings.generate_tabs = not siteProps.disable_folder_sections
     settings.nonfolderish_tabs = not siteProps.disable_nonfolderish_sections
@@ -72,7 +75,14 @@ def editing_properties_to_registry(context):
     settings.visible_ids = siteProps.visible_ids
     settings.enable_link_integrity_checks = siteProps.enable_link_integrity_checks
     settings.ext_editor = siteProps.ext_editor
-    settings.default_editor = siteProps.default_editor
+    
+    factory = getUtility(IVocabularyFactory,'plone.app.vocabularies.AvailableEditors')
+    available_editors = factory(context)
+    if siteProps.default_editor in available_editors:
+        settings.default_editor = siteProps.default_editor
+    else:
+        #keep the defaul_edior set in the schema
+        pass
     settings.lock_on_ttw_edit = siteProps.lock_on_ttw_edit
 
     
