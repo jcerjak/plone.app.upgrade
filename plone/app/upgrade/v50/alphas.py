@@ -1,8 +1,11 @@
 import logging
-
+from plone.registry.interfaces import IRegistry
+from zope.component import queryUtility
 from Products.CMFCore.utils import getToolByName
 
 from plone.app.upgrade.utils import loadMigrationProfile
+from plone.app.controlpanel.interfaces import INavigationSchema
+from plone.app.controlpanel.interfaces import IEditingSchema
 
 logger = logging.getLogger('plone.app.upgrade')
 
@@ -31,3 +34,28 @@ def lowercase_email_login(context):
         # if this would result in non-unique login names.
         pas = getToolByName(context, 'acl_users')
         pas.manage_changeProperties(login_transform='lower')
+
+
+def navigation_properties_to_registry(context):
+    """"""
+    ttool = getToolByName(context , 'portal_types')
+    ptool = getToolByName(context, 'portal_properties')
+    siteProps = ptool['site_properties']
+    navProps = ptool['navtree_properties']
+
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(INavigationSchema)
+    registry.registerInterface(IEditingSchema)
+    settings = registry.forInterface(INavigationSchema)
+    settings.generate_tabs = not siteProps.disable_folder_sections
+    settings.nonfolderish_tabs = not siteProps.disable_nonfolderish_sections
+
+    allTypes = ttool.listContentTypes()
+    displayed_types = tuple([
+        t for t in allTypes \
+        if t not in navProps.metaTypesNotToList])
+    settings.displayed_types = displayed_types
+
+    settings.filter_on_workflow = navProps.enable_wf_state_filtering
+    settings.workflow_states_to_show = navProps.wf_states_to_show
+    settings.show_excluded_items = navProps.showAllParents

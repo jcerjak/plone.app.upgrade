@@ -29,6 +29,12 @@
           handler=".alphas.lowercase_email_login"
           />
 
-    </gs:upgradeSteps>
 
+      <gs:upgradeStep
+          title="navigation to portal_registry"
+          description="Move configuration from navigation portal_properties to portal_registry."
+          handler=".alphas.navigation_properties_to_registry"
+          />
+
+    </gs:upgradeSteps>
 </configure>
