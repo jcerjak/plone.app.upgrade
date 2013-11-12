@@ -10,6 +10,8 @@ from Products.CMFCore.utils import getToolByName
 from plone.app.upgrade.utils import loadMigrationProfile
 from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.interfaces import IEditingSchema
+from plone.app.controlpanel.interfaces import IFilterTagsSchema
+from plone.app.controlpanel.bbb.filter import XHTML_TAGS
 
 logger = logging.getLogger('plone.app.upgrade')
 
@@ -42,7 +44,7 @@ def lowercase_email_login(context):
 
 def navigation_properties_to_registry(context):
     """"""
-    ttool = getToolByName(context , 'portal_types')
+    ttool = getToolByName(context, 'portal_types')
     ptool = getToolByName(context, 'portal_properties')
     siteProps = ptool['site_properties']
     navProps = ptool['navtree_properties']
@@ -55,7 +57,7 @@ def navigation_properties_to_registry(context):
 
     allTypes = ttool.listContentTypes()
     displayed_types = tuple([
-        t for t in allTypes \
+        t for t in allTypes
         if t not in navProps.metaTypesNotToList])
     settings.displayed_types = displayed_types
 
@@ -63,11 +65,12 @@ def navigation_properties_to_registry(context):
     settings.workflow_states_to_show = navProps.wf_states_to_show
     settings.show_excluded_items = navProps.showAllParents
 
+
 def editing_properties_to_registry(context):
     """"""
     ptool = getToolByName(context, 'portal_properties')
     siteProps = ptool['site_properties']
-    
+
     registry = queryUtility(IRegistry)
     registry.registerInterface(IEditingSchema)
     settings = registry.forInterface(IEditingSchema)
@@ -75,8 +78,8 @@ def editing_properties_to_registry(context):
     settings.visible_ids = siteProps.visible_ids
     settings.enable_link_integrity_checks = siteProps.enable_link_integrity_checks
     settings.ext_editor = siteProps.ext_editor
-    
-    factory = getUtility(IVocabularyFactory,'plone.app.vocabularies.AvailableEditors')
+
+    factory = getUtility(IVocabularyFactory, 'plone.app.vocabularies.AvailableEditors')
     available_editors = factory(context)
     if siteProps.default_editor in available_editors:
         settings.default_editor = siteProps.default_editor
@@ -85,5 +88,23 @@ def editing_properties_to_registry(context):
         pass
     settings.lock_on_ttw_edit = siteProps.lock_on_ttw_edit
 
-    
-    
+
+def filter_tag_properties_to_registry(context):
+    """"""
+    transform = getattr(
+        getToolByName(context, 'portal_transforms'), 'safe_html')
+
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(IFilterTagsSchema)
+    settings = registry.forInterface(IFilterTagsSchema)
+
+    nasty = transform.get_parameter_value('nasty_tags')
+    valid = set(transform.get_parameter_value('valid_tags'))
+    stripped = XHTML_TAGS - valid
+    custom = valid - XHTML_TAGS
+    sorted_nasty = sorted([ctype.decode('utf-8') for ctype in nasty])
+    sorted_stripped = sorted([bad.decode('utf-8') for bad in stripped])
+    sorted_custom = sorted([cus.decode('utf-8') for cus in custom])
+    settings.nasty_tags = sorted_nasty
+    settings.stripped_tags = sorted_stripped
+    settings.custom_tags = sorted_custom

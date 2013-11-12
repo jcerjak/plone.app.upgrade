@@ -41,6 +41,11 @@
           description="Move configuration from editing portal_properties to portal_registry."
           handler=".alphas.editing_properties_to_registry"
           />
-          
+
+      <gs:upgradeStep
+          title="filter_tag properties to portal_registry"
+          description="Move configuration from filter_tag portal_properties to portal_registry."
+          handler=".alphas.filter_tag_properties_to_registry"
+          />
     </gs:upgradeSteps>
 </configure>
