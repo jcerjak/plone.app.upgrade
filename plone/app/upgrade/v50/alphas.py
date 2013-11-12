@@ -59,3 +59,21 @@ def navigation_properties_to_registry(context):
     settings.filter_on_workflow = navProps.enable_wf_state_filtering
     settings.workflow_states_to_show = navProps.wf_states_to_show
     settings.show_excluded_items = navProps.showAllParents
+
+def editing_properties_to_registry(context):
+    """"""
+    ptool = getToolByName(context, 'portal_properties')
+    siteProps = ptool['site_properties']
+    
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(IEditingSchema)
+    settings = registry.forInterface(IEditingSchema)
+
+    settings.visible_ids = siteProps.visible_ids
+    settings.enable_link_integrity_checks = siteProps.enable_link_integrity_checks
+    settings.ext_editor = siteProps.ext_editor
+    settings.default_editor = siteProps.default_editor
+    settings.lock_on_ttw_edit = siteProps.lock_on_ttw_edit
+
+    
+    

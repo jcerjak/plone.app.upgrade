@@ -66,3 +66,22 @@ class PASUpgradeTest(MigrationTest):
         self.assertEqual(settings.workflow_states_to_show, navProps.wf_states_to_show)
         self.assertEqual(settings.show_excluded_items, navProps.showAllParents)
         self.assertTrue(not settings.show_excluded_items)
+
+
+    def test_editing_properties_to_registry(self)
+
+        portal_setup = getToolByName(self.portal, 'portal_setup')
+        portal_setup.runAllImportStepsFromProfile('profile-plone.app.controlpanel:default')
+        registry = queryUtility(IRegistry)
+        registry.registerInterface(IEditingSchema)
+        
+        ptool = getToolByName(self.portal, 'portal_properties')
+        siteProps = ptool['site_properties']
+        alphas.navigation_properties_to_registry(self.portal)
+        settings = registry.forInterface(IEditingSchema)
+        
+        for v in ('visible_ids', 'enable_link_integrity_checks', \
+                  'ext_editor', 'default_editor', 'lock_on_ttw_edit'):  
+            self.assertEqual(settings[v], siteProps[v])
+        
+        

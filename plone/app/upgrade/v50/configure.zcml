@@ -31,10 +31,16 @@
 
 
       <gs:upgradeStep
-          title="navigation to portal_registry"
+          title="navigation properties to portal_registry"
           description="Move configuration from navigation portal_properties to portal_registry."
           handler=".alphas.navigation_properties_to_registry"
           />
 
+      <gs:upgradeStep
+          title="editing properties to portal_registry"
+          description="Move configuration from editing portal_properties to portal_registry."
+          handler=".alphas.editing_properties_to_registry"
+          />
+          
     </gs:upgradeSteps>
 </configure>
