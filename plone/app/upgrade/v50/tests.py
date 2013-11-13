@@ -112,7 +112,7 @@ class PASUpgradeTest(MigrationTest):
         self.assertEqual(settings.nasty_tags, sorted_nasty)
         self.assertEqual(settings.stripped_tags, sorted_stripped)
         self.assertEqual(settings.custom_tags, sorted_custom)
-            
+
     def test_portal_languages_to_registry(self):
 
         ltool = aq_inner(getToolByName(self.portal,'portal_languages'))
