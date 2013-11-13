@@ -49,7 +49,6 @@ def lowercase_email_login(context):
 
 
 def navigation_properties_to_registry(context):
-    """"""
     ttool = getToolByName(context, 'portal_types')
     ptool = getToolByName(context, 'portal_properties')
     siteProps = ptool['site_properties']
@@ -73,7 +72,6 @@ def navigation_properties_to_registry(context):
 
 
 def editing_properties_to_registry(context):
-    """"""
     ptool = getToolByName(context, 'portal_properties')
     siteProps = ptool['site_properties']
 
@@ -98,7 +96,6 @@ def editing_properties_to_registry(context):
 
 
 def filter_tag_properties_to_registry(context):
-    """"""
     transform = getattr(
         getToolByName(context, 'portal_transforms'), 'safe_html')
 
@@ -119,7 +116,6 @@ def filter_tag_properties_to_registry(context):
 
 
 def portal_languages_to_registry(context):
-    """"""
     ltool = aq_inner(getToolByName(context, 'portal_languages'))
 
     registry = queryUtility(IRegistry)
@@ -153,7 +149,6 @@ def markup_properties_to_registry(context):
 
 
 def mail_settings_to_registry(context):
-    """"""
     mailhost = getToolByName(context, 'MailHost')
 
     registry = queryUtility(IRegistry)
