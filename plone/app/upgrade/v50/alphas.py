@@ -8,6 +8,8 @@ from zope.component import getUtility
 from zope.schema.interfaces import IVocabularyFactory
 
 from Products.CMFCore.utils import getToolByName
+from Products.CMFCore.interfaces import ISiteRoot
+from Products.CMFPlone.utils import safe_unicode
 
 from plone.app.upgrade.utils import loadMigrationProfile
 from plone.app.controlpanel.interfaces import IEditingSchema
@@ -16,7 +18,7 @@ from plone.app.controlpanel.interfaces import ILanguageSchema
 from plone.app.controlpanel.interfaces import IMarkupSchema
 from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.bbb.filter import XHTML_TAGS
-
+from plone.app.controlpanel.interfaces import IMailSchema
 logger = logging.getLogger('plone.app.upgrade')
 
 
@@ -148,3 +150,22 @@ def markup_properties_to_registry(context):
     settings.default_type = site_properties.default_contenttype
     markup_adapter = getAdapter(portal, IMarkupSchema)
     settings.allowed_types = tuple(markup_adapter.allowed_types)
+
+
+def mail_settings_to_registry(context):
+    """"""
+    mailhost = getToolByName(context, 'MailHost')
+
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(IMailSchema)
+    settings = registry.forInterface(IMailSchema)
+    settings.smtp_host = safe_unicode(getattr(mailhost, 'smtp_host', ''))
+    settings.smtp_port = getattr(mailhost, 'smtp_port', None)
+    settings.smtp_userid = safe_unicode(getattr(mailhost, 'smtp_userid',
+                                        getattr(mailhost, 'smtp_uid', None)))
+    settings.smtp_pass = safe_unicode(getattr(mailhost, 'smtp_pass',
+                                      getattr(mailhost, 'smtp_pwd', None)))
+    settings.email_from_name = safe_unicode(
+        getUtility(ISiteRoot).email_from_name)
+    settings.email_from_address = getUtility(
+        ISiteRoot).email_from_address.encode('ascii','ignore')

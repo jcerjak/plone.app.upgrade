@@ -1,6 +1,7 @@
 from Acquisition import aq_inner
 
 from Products.CMFCore.utils import getToolByName
+from Products.CMFCore.interfaces import ISiteRoot
 
 from plone.app.upgrade.tests.base import MigrationTest
 
@@ -17,6 +18,8 @@ from plone.app.controlpanel.interfaces import ILanguageSchema
 from plone.app.controlpanel.interfaces import IMarkupSchema
 from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.bbb.filter import XHTML_TAGS
+
+from plone.app.controlpanel.interfaces import IMailSchema
 
 
 class PASUpgradeTest(MigrationTest):
@@ -121,7 +124,7 @@ class PASUpgradeTest(MigrationTest):
         registry = queryUtility(IRegistry)
         registry.registerInterface(ILanguageSchema)
         settings = registry.forInterface(ILanguageSchema)
-
+        alphas.portal_languages_to_registry(self.portal)
         self.assertEqual(settings.use_combined_language_codes, ltool.use_combined_language_codes)
         factory = getUtility(IVocabularyFactory, 'plone.app.vocabularies.AvailableContentLanguages')
         available_content_languages = factory(self.portal)
@@ -129,6 +132,7 @@ class PASUpgradeTest(MigrationTest):
             self.assertEqual(settings.default_language, ltool.getDefaultLanguage())
         else:
             self.assertTrue(settings.default_language in available_content_languages)
+
 
     def test_markup_to_registry(self):
         pprop = getToolByName(self.portal, 'portal_properties')
@@ -141,3 +145,20 @@ class PASUpgradeTest(MigrationTest):
         alphas.markup_properties_to_registry(self.portal)
         self.assertEqual(settings.default_type, site_properties.default_contenttype)
         self.assertEqual(settings.allowed_types, tuple(markup_adapter.allowed_types))
+
+
+    def test_mail_settings_to_registry(self):
+        mailhost = getToolByName(self.portal, 'MailHost')
+
+        registry = queryUtility(IRegistry)
+        registry.registerInterface(IMailSchema)
+        settings = registry.forInterface(IMailSchema)
+        alphas.mail_settings_to_registry(self.portal)
+        self.assertEqual(settings.smtp_host, getattr(mailhost, 'smtp_host', None))
+        self.assertEqual(settings.smtp_port, getattr(mailhost, 'smtp_port', None))
+        self.assertEqual(settings.smtp_userid, getattr(mailhost, 'smtp_userid',
+                                   getattr(mailhost, 'smtp_uid', None)))
+        self.assertEqual(settings.smtp_pass, getattr(mailhost, 'smtp_pass',
+                                  getattr(mailhost, 'smtp_pwd', None)))
+        self.assertEqual(settings.email_from_name, getUtility(ISiteRoot).email_from_name)
+        self.assertEqual(settings.email_from_address, getUtility(ISiteRoot).email_from_address)

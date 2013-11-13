@@ -59,5 +59,12 @@
           description="Move markup configuration from portal_properties to portal_registry."
           handler=".alphas.markup_properties_to_registry"
           />
+
+      <gs:upgradeStep
+          title="mail settings to portal_registry"
+          description="Move mailhost configuration to portal_registry."
+          handler=".alphas.mail_settings_to_registry"
+          />
+
     </gs:upgradeSteps>
 </configure>
