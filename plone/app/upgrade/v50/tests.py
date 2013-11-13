@@ -22,6 +22,7 @@ from plone.app.controlpanel.bbb.filter import XHTML_TAGS
 
 from plone.app.controlpanel.interfaces import IMailSchema
 from plone.app.controlpanel.interfaces import ISecuritySchema
+from plone.app.controlpanel.interfaces import ISkinsSchema
 
 
 class PASUpgradeTest(MigrationTest):
@@ -178,6 +179,18 @@ class PASUpgradeTest(MigrationTest):
         self.assertEqual(settings.enable_user_folders, mtool.memberareaCreationFlag)
         self.assertEqual(settings.allow_anon_views_about, site_properties.allowAnonymousViewAbout)
         self.assertEqual(settings.use_email_as_login, site_properties.use_email_as_login)
+
+    def test_skins_properties_to_registry(self):
+        skins_props = getAdapter(self.portal, ISkinsSchema)
+        registry = queryUtility(IRegistry)
+        settings = registry.forInterface(ISkinsSchema)
+        alphas.skins_properties_to_registry(self.portal)
+
+        self.assertEqual(settings.theme, skins_props.theme)
+        self.assertEqual(settings.mark_special_links, skins_props.mark_special_links)
+        self.assertEqual(settings.ext_links_open_new_window, skins_props.ext_links_open_new_window)
+        self.assertEqual(settings.icon_visibility, skins_props.icon_visibility)
+        self.assertEqual(settings.use_popups, skins_props.use_popups)
 
     def test_mail_settings_to_registry(self):
         mailhost = getToolByName(self.portal, 'MailHost')

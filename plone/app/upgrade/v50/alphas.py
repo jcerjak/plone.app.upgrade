@@ -21,6 +21,7 @@ from plone.app.controlpanel.interfaces import IMarkupSchema
 from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.interfaces import ISearchSchema
 from plone.app.controlpanel.interfaces import ISecuritySchema
+from plone.app.controlpanel.interfaces import ISkinsSchema
 logger = logging.getLogger('plone.app.upgrade')
 
 
@@ -183,6 +184,21 @@ def security_settings_to_registry(context):
     settings.enable_user_folders = mtool.memberareaCreationFlag
     settings.allow_anon_views_about = site_properties.allowAnonymousViewAbout
     settings.use_email_as_login = site_properties.use_email_as_login
+
+
+def skins_properties_to_registry(context):
+    portal = getToolByName(context, 'portal_url').getPortalObject()
+    skins_props = getAdapter(portal, ISkinsSchema)
+
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(ISkinsSchema)
+    settings = registry.forInterface(ISkinsSchema)
+
+    settings.theme = skins_props.theme
+    settings.mark_special_links = skins_props.mark_special_links
+    settings.ext_links_open_new_window = skins_props.ext_links_open_new_window
+    settings.icon_visibility = skins_props.icon_visibility
+    settings.use_popups = skins_props.use_popups
 
 
 def mail_settings_to_registry(context):
