@@ -8,15 +8,19 @@ from zope.component import getUtility
 from zope.schema.interfaces import IVocabularyFactory
 
 from Products.CMFCore.utils import getToolByName
+from Products.CMFCore.interfaces import ISiteRoot
+from Products.CMFPlone.utils import safe_unicode
 
 from plone.app.upgrade.utils import loadMigrationProfile
+from plone.app.controlpanel.bbb.filter import XHTML_TAGS
 from plone.app.controlpanel.interfaces import IEditingSchema
 from plone.app.controlpanel.interfaces import IFilterTagsSchema
 from plone.app.controlpanel.interfaces import ILanguageSchema
+from plone.app.controlpanel.interfaces import IMailSchema
 from plone.app.controlpanel.interfaces import IMarkupSchema
 from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.interfaces import ISearchSchema
-from plone.app.controlpanel.bbb.filter import XHTML_TAGS
+from plone.app.controlpanel.interfaces import ISecuritySchema
 logger = logging.getLogger('plone.app.upgrade')
 
 
@@ -47,7 +51,6 @@ def lowercase_email_login(context):
 
 
 def navigation_properties_to_registry(context):
-    """"""
     ttool = getToolByName(context, 'portal_types')
     ptool = getToolByName(context, 'portal_properties')
     siteProps = ptool['site_properties']
@@ -71,7 +74,6 @@ def navigation_properties_to_registry(context):
 
 
 def editing_properties_to_registry(context):
-    """"""
     ptool = getToolByName(context, 'portal_properties')
     siteProps = ptool['site_properties']
 
@@ -96,7 +98,6 @@ def editing_properties_to_registry(context):
 
 
 def filter_tag_properties_to_registry(context):
-    """"""
     transform = getattr(
         getToolByName(context, 'portal_transforms'), 'safe_html')
 
@@ -117,7 +118,6 @@ def filter_tag_properties_to_registry(context):
 
 
 def portal_languages_to_registry(context):
-    """"""
     ltool = aq_inner(getToolByName(context, 'portal_languages'))
 
     registry = queryUtility(IRegistry)
@@ -165,3 +165,39 @@ def search_properties_to_registry(context):
     types_not_searched = pprop['site_properties'].types_not_searched
     valid_types_not_searched = [t for t in types_not_searched if t in types_voc]
     settings.types_not_searched = tuple(valid_types_not_searched)
+
+
+def security_settings_to_registry(context):
+    portal = getToolByName(context, 'portal_url').getPortalObject()
+    pprop = getToolByName(context, 'portal_properties')
+    site_properties = pprop['site_properties']
+    mtool = getToolByName(portal, "portal_membership")
+    security_properties = getAdapter(portal, ISecuritySchema)
+
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(ISecuritySchema)
+    settings = registry.forInterface(ISecuritySchema)
+
+    settings.enable_self_reg = security_properties.enable_self_reg
+    settings.enable_user_pwd_choice = not portal.validate_email
+    settings.enable_user_folders = mtool.memberareaCreationFlag
+    settings.allow_anon_views_about = site_properties.allowAnonymousViewAbout
+    settings.use_email_as_login = site_properties.use_email_as_login
+
+
+def mail_settings_to_registry(context):
+    mailhost = getToolByName(context, 'MailHost')
+
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(IMailSchema)
+    settings = registry.forInterface(IMailSchema)
+    settings.smtp_host = safe_unicode(getattr(mailhost, 'smtp_host', ''))
+    settings.smtp_port = getattr(mailhost, 'smtp_port', None)
+    settings.smtp_userid = safe_unicode(getattr(mailhost, 'smtp_userid',
+                                        getattr(mailhost, 'smtp_uid', None)))
+    settings.smtp_pass = safe_unicode(getattr(mailhost, 'smtp_pass',
+                                      getattr(mailhost, 'smtp_pwd', None)))
+    settings.email_from_name = safe_unicode(
+        getUtility(ISiteRoot).email_from_name)
+    settings.email_from_address = getUtility(
+        ISiteRoot).email_from_address.encode('ascii', 'ignore')

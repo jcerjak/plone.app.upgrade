@@ -1,6 +1,7 @@
 from Acquisition import aq_inner
 
 from Products.CMFCore.utils import getToolByName
+from Products.CMFCore.interfaces import ISiteRoot
 
 from plone.app.upgrade.tests.base import MigrationTest
 
@@ -18,6 +19,9 @@ from plone.app.controlpanel.interfaces import IMarkupSchema
 from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.interfaces import ISearchSchema
 from plone.app.controlpanel.bbb.filter import XHTML_TAGS
+
+from plone.app.controlpanel.interfaces import IMailSchema
+from plone.app.controlpanel.interfaces import ISecuritySchema
 
 
 class PASUpgradeTest(MigrationTest):
@@ -122,7 +126,7 @@ class PASUpgradeTest(MigrationTest):
         registry = queryUtility(IRegistry)
         registry.registerInterface(ILanguageSchema)
         settings = registry.forInterface(ILanguageSchema)
-
+        alphas.portal_languages_to_registry(self.portal)
         self.assertEqual(settings.use_combined_language_codes, ltool.use_combined_language_codes)
         factory = getUtility(IVocabularyFactory, 'plone.app.vocabularies.AvailableContentLanguages')
         available_content_languages = factory(self.portal)
@@ -157,3 +161,36 @@ class PASUpgradeTest(MigrationTest):
         valid_types_not_searched = [t for t in types_not_searched if t in types_voc]
         self.assertEqual(settings.enable_livesearch, search_properties.enable_livesearch)
         self.assertEqual(settings.types_not_searched, tuple(valid_types_not_searched))
+
+    def test_security_settings_to_registry(self):
+        pprop = getToolByName(self.portal, 'portal_properties')
+        site_properties = pprop['site_properties']
+        mtool = getToolByName(self.portal, "portal_membership")
+        security_properties = getAdapter(self.portal, ISecuritySchema)
+
+        registry = queryUtility(IRegistry)
+        registry.registerInterface(ISecuritySchema)
+        settings = registry.forInterface(ISecuritySchema)
+
+        alphas.security_settings_to_registry(self.portal)
+        self.assertEqual(settings.enable_self_reg, security_properties.enable_self_reg)
+        self.assertEqual(settings.enable_user_pwd_choice, not self.portal.validate_email)
+        self.assertEqual(settings.enable_user_folders, mtool.memberareaCreationFlag)
+        self.assertEqual(settings.allow_anon_views_about, site_properties.allowAnonymousViewAbout)
+        self.assertEqual(settings.use_email_as_login, site_properties.use_email_as_login)
+
+    def test_mail_settings_to_registry(self):
+        mailhost = getToolByName(self.portal, 'MailHost')
+
+        registry = queryUtility(IRegistry)
+        registry.registerInterface(IMailSchema)
+        settings = registry.forInterface(IMailSchema)
+        alphas.mail_settings_to_registry(self.portal)
+        self.assertEqual(settings.smtp_host, getattr(mailhost, 'smtp_host', None))
+        self.assertEqual(settings.smtp_port, getattr(mailhost, 'smtp_port', None))
+        self.assertEqual(settings.smtp_userid, getattr(mailhost, 'smtp_userid',
+                                   getattr(mailhost, 'smtp_uid', None)))  # noqa
+        self.assertEqual(settings.smtp_pass, getattr(mailhost, 'smtp_pass',
+                                  getattr(mailhost, 'smtp_pwd', None)))  # noqa
+        self.assertEqual(settings.email_from_name, getUtility(ISiteRoot).email_from_name)
+        self.assertEqual(settings.email_from_address, getUtility(ISiteRoot).email_from_address)
