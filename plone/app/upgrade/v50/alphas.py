@@ -1,6 +1,7 @@
 import logging
 from Acquisition import aq_inner
 from plone.registry.interfaces import IRegistry
+from zope.component import getAdapter
 from zope.component import queryUtility
 from zope.component import getUtility
 
@@ -9,11 +10,12 @@ from zope.schema.interfaces import IVocabularyFactory
 from Products.CMFCore.utils import getToolByName
 
 from plone.app.upgrade.utils import loadMigrationProfile
-from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.interfaces import IEditingSchema
 from plone.app.controlpanel.interfaces import IFilterTagsSchema
-from plone.app.controlpanel.bbb.filter import XHTML_TAGS
 from plone.app.controlpanel.interfaces import ILanguageSchema
+from plone.app.controlpanel.interfaces import IMarkupSchema
+from plone.app.controlpanel.interfaces import INavigationSchema
+from plone.app.controlpanel.bbb.filter import XHTML_TAGS
 
 logger = logging.getLogger('plone.app.upgrade')
 
@@ -113,9 +115,10 @@ def filter_tag_properties_to_registry(context):
     settings.stripped_tags = sorted_stripped
     settings.custom_tags = sorted_custom
 
+
 def portal_languages_to_registry(context):
     """"""
-    ltool = aq_inner(getToolByName(context,'portal_languages'))
+    ltool = aq_inner(getToolByName(context, 'portal_languages'))
 
     registry = queryUtility(IRegistry)
     registry.registerInterface(ILanguageSchema)
@@ -132,3 +135,16 @@ def portal_languages_to_registry(context):
                     "in portal_languages is no longer available" %
                     (settings.default_language, retrieved_language))
     settings.use_combined_language_codes = ltool.use_combined_language_codes
+
+
+def markup_properties_to_registry(context):
+    portal = getToolByName(context, 'portal_url').getPortalObject()
+    pprop = getToolByName(context, 'portal_properties')
+    site_properties = pprop['site_properties']
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(ILanguageSchema)
+    settings = registry.forInterface(ILanguageSchema)
+
+    settings.default_type = site_properties.default_contenttype
+    markup_adapter = getAdapter(portal, IMarkupSchema)
+    settings.allowed_types = tuple(markup_adapter.allowed_types)

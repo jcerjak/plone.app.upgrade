@@ -54,5 +54,10 @@
           handler=".alphas.portal_languages_to_registry"
           />
 
+      <gs:upgradeStep
+          title="portal_languages settings to portal_registry"
+          description="Move configuration from portal_languages to portal_registry."
+          handler=".alphas.markup_properties_to_registry"
+          />
     </gs:upgradeSteps>
 </configure>
