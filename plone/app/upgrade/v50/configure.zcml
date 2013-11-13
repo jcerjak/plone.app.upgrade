@@ -59,5 +59,11 @@
           description="Move markup configuration from portal_properties to portal_registry."
           handler=".alphas.markup_properties_to_registry"
           />
+
+      <gs:upgradeStep
+          title="seach settings to portal_registry"
+          description="Move search configuration from portal_properties to portal_registry."
+          handler=".alphas.search_properties_to_registry"
+          />
     </gs:upgradeSteps>
 </configure>

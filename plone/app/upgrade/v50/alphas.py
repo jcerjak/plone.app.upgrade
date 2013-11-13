@@ -15,8 +15,8 @@ from plone.app.controlpanel.interfaces import IFilterTagsSchema
 from plone.app.controlpanel.interfaces import ILanguageSchema
 from plone.app.controlpanel.interfaces import IMarkupSchema
 from plone.app.controlpanel.interfaces import INavigationSchema
+from plone.app.controlpanel.interfaces import ISearchSchema
 from plone.app.controlpanel.bbb.filter import XHTML_TAGS
-
 logger = logging.getLogger('plone.app.upgrade')
 
 
@@ -148,3 +148,20 @@ def markup_properties_to_registry(context):
     settings.default_type = site_properties.default_contenttype
     markup_adapter = getAdapter(portal, IMarkupSchema)
     settings.allowed_types = tuple(markup_adapter.allowed_types)
+
+
+def search_properties_to_registry(context):
+    portal = getToolByName(context, 'portal_url').getPortalObject()
+    search_properties = getAdapter(portal, ISearchSchema)
+    name = 'plone.app.vocabularies.PortalTypes'
+    util = queryUtility(IVocabularyFactory, name)
+    types_voc = util(context)
+    pprop = getToolByName(portal, 'portal_properties')
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(ISearchSchema)
+    settings = registry.forInterface(ISearchSchema)
+
+    settings.enable_livesearch = search_properties.enable_livesearch
+    types_not_searched = pprop['site_properties'].types_not_searched
+    valid_types_not_searched = [t for t in types_not_searched if t in types_voc]
+    settings.types_not_searched = tuple(valid_types_not_searched)

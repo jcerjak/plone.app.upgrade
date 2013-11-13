@@ -16,6 +16,7 @@ from plone.app.controlpanel.interfaces import IFilterTagsSchema
 from plone.app.controlpanel.interfaces import ILanguageSchema
 from plone.app.controlpanel.interfaces import IMarkupSchema
 from plone.app.controlpanel.interfaces import INavigationSchema
+from plone.app.controlpanel.interfaces import ISearchSchema
 from plone.app.controlpanel.bbb.filter import XHTML_TAGS
 
 
@@ -141,3 +142,18 @@ class PASUpgradeTest(MigrationTest):
         alphas.markup_properties_to_registry(self.portal)
         self.assertEqual(settings.default_type, site_properties.default_contenttype)
         self.assertEqual(settings.allowed_types, tuple(markup_adapter.allowed_types))
+
+    def test_search_properties_to_registry(self):
+        search_properties = getAdapter(self.portal, ISearchSchema)
+        pprop = getToolByName(self.portal, 'portal_properties')
+        name = 'plone.app.vocabularies.PortalTypes'
+        util = queryUtility(IVocabularyFactory, name)
+        types_voc = util(self.portal)
+        registry = queryUtility(IRegistry)
+        registry.registerInterface(ISearchSchema)
+        settings = registry.forInterface(ISearchSchema)
+        alphas.search_properties_to_registry(self.portal)
+        types_not_searched = pprop['site_properties'].types_not_searched
+        valid_types_not_searched = [t for t in types_not_searched if t in types_voc]
+        self.assertEqual(settings.enable_livesearch, search_properties.enable_livesearch)
+        self.assertEqual(settings.types_not_searched, tuple(valid_types_not_searched))
