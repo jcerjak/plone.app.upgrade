@@ -32,19 +32,19 @@
 
       <gs:upgradeStep
           title="navigation properties to portal_registry"
-          description="Move configuration from navigation portal_properties to portal_registry."
+          description="Move navigation configuration from portal_properties to portal_registry."
           handler=".alphas.navigation_properties_to_registry"
           />
 
       <gs:upgradeStep
           title="editing properties to portal_registry"
-          description="Move configuration from editing portal_properties to portal_registry."
+          description="Move editing configuration from portal_properties to portal_registry."
           handler=".alphas.editing_properties_to_registry"
           />
 
       <gs:upgradeStep
           title="filter_tag properties to portal_registry"
-          description="Move configuration from filter_tag portal_properties to portal_registry."
+          description="Move filter_tag configuration from portal_properties to portal_registry."
           handler=".alphas.filter_tag_properties_to_registry"
           />
 
@@ -55,8 +55,8 @@
           />
 
       <gs:upgradeStep
-          title="portal_languages settings to portal_registry"
-          description="Move configuration from portal_languages to portal_registry."
+          title="markup settings to portal_registry"
+          description="Move markup configuration from portal_properties to portal_registry."
           handler=".alphas.markup_properties_to_registry"
           />
     </gs:upgradeSteps>
