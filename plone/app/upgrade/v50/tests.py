@@ -20,6 +20,7 @@ from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.bbb.filter import XHTML_TAGS
 
 from plone.app.controlpanel.interfaces import IMailSchema
+from plone.app.controlpanel.interfaces import ISecuritySchema
 
 
 class PASUpgradeTest(MigrationTest):
@@ -133,7 +134,6 @@ class PASUpgradeTest(MigrationTest):
         else:
             self.assertTrue(settings.default_language in available_content_languages)
 
-
     def test_markup_to_registry(self):
         pprop = getToolByName(self.portal, 'portal_properties')
         site_properties = pprop['site_properties']
@@ -146,6 +146,22 @@ class PASUpgradeTest(MigrationTest):
         self.assertEqual(settings.default_type, site_properties.default_contenttype)
         self.assertEqual(settings.allowed_types, tuple(markup_adapter.allowed_types))
 
+    def test_security_settings_to_registry(self):
+        pprop = getToolByName(self.portal, 'portal_properties')
+        site_properties = pprop['site_properties']
+        mtool = getToolByName(self.portal, "portal_membership")
+        security_properties = getAdapter(self.portal, ISecuritySchema)
+
+        registry = queryUtility(IRegistry)
+        registry.registerInterface(ISecuritySchema)
+        settings = registry.forInterface(ISecuritySchema)
+
+        alphas.security_settings_to_registry(self.portal)
+        self.assertEqual(settings.enable_self_reg, security_properties.enable_self_reg)
+        self.assertEqual(settings.enable_user_pwd_choice, not self.portal.validate_email)
+        self.assertEqual(settings.enable_user_folders, mtool.memberareaCreationFlag)
+        self.assertEqual(settings.allow_anon_views_about, site_properties.allowAnonymousViewAbout)
+        self.assertEqual(settings.use_email_as_login, site_properties.use_email_as_login)
 
     def test_mail_settings_to_registry(self):
         mailhost = getToolByName(self.portal, 'MailHost')

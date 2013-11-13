@@ -17,6 +17,7 @@ from plone.app.controlpanel.interfaces import IFilterTagsSchema
 from plone.app.controlpanel.interfaces import ILanguageSchema
 from plone.app.controlpanel.interfaces import IMarkupSchema
 from plone.app.controlpanel.interfaces import INavigationSchema
+from plone.app.controlpanel.interfaces import ISecuritySchema
 from plone.app.controlpanel.bbb.filter import XHTML_TAGS
 from plone.app.controlpanel.interfaces import IMailSchema
 logger = logging.getLogger('plone.app.upgrade')
@@ -148,6 +149,24 @@ def markup_properties_to_registry(context):
     settings.allowed_types = tuple(markup_adapter.allowed_types)
 
 
+def security_settings_to_registry(context):
+    portal = getToolByName(context, 'portal_url').getPortalObject()
+    pprop = getToolByName(context, 'portal_properties')
+    site_properties = pprop['site_properties']
+    mtool = getToolByName(portal, "portal_membership")
+    security_properties = getAdapter(portal, ISecuritySchema)
+
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(ISecuritySchema)
+    settings = registry.forInterface(ISecuritySchema)
+
+    settings.enable_self_reg = security_properties.enable_self_reg
+    settings.enable_user_pwd_choice = not portal.validate_email
+    settings.enable_user_folders = mtool.memberareaCreationFlag
+    settings.allow_anon_views_about = site_properties.allowAnonymousViewAbout
+    settings.use_email_as_login = site_properties.use_email_as_login
+
+
 def mail_settings_to_registry(context):
     mailhost = getToolByName(context, 'MailHost')
 
@@ -163,4 +182,4 @@ def mail_settings_to_registry(context):
     settings.email_from_name = safe_unicode(
         getUtility(ISiteRoot).email_from_name)
     settings.email_from_address = getUtility(
-        ISiteRoot).email_from_address.encode('ascii','ignore')
+        ISiteRoot).email_from_address.encode('ascii', 'ignore')
