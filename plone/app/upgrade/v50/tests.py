@@ -22,6 +22,7 @@ from plone.app.controlpanel.interfaces import ISearchSchema
 from plone.app.controlpanel.interfaces import ISecuritySchema
 from plone.app.controlpanel.interfaces import ISiteSchema
 from plone.app.controlpanel.interfaces import ISkinsSchema
+from plone.app.controlpanel.interfaces import IUserGroupsSettingsSchema
 from plone.app.controlpanel.bbb.filter import XHTML_TAGS
 from Products.CMFPlone.utils import safe_unicode
 
@@ -240,3 +241,15 @@ class PASUpgradeTest(MigrationTest):
         self.assertEqual(settings.exposeDCMetaTags, exposeDCMetaTags)
         self.assertEqual(settings.enable_sitemap, enable_sitemap)
         self.assertEqual(settings.webstats_js, webstats_js)
+
+
+    def test_usergroup_settings_to_registry(self):
+        site_properties = getattr(
+            getToolByName(self.portal, "portal_properties"), 'site_properties')
+        registry = queryUtility(IRegistry)
+        registry.registerInterface(IUserGroupsSettingsSchema)
+        settings = registry.forInterface(IUserGroupsSettingsSchema)
+
+        alphas.usergroup_settings_to_registry(self.portal)
+        self.assertEqual(settings.many_users, site_properties.many_users)
+        self.assertEqual(settings.many_groups, site_properties.many_groups)

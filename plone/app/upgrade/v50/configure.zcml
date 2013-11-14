@@ -89,5 +89,11 @@
           description="Move site configuration to portal_registry."
           handler=".alphas.site_settings_to_registry"
           />
+
+      <gs:upgradeStep
+          title="usergroup settings to portal_registry"
+          description="Move usergroup configuration to portal_registry."
+          handler=".alphas.usergroup_settings_to_registry"
+          />
     </gs:upgradeSteps>
 </configure>

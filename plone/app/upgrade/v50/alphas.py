@@ -23,6 +23,7 @@ from plone.app.controlpanel.interfaces import ISearchSchema
 from plone.app.controlpanel.interfaces import ISecuritySchema
 from plone.app.controlpanel.interfaces import ISiteSchema
 from plone.app.controlpanel.interfaces import ISkinsSchema
+from plone.app.controlpanel.interfaces import IUserGroupsSettingsSchema
 logger = logging.getLogger('plone.app.upgrade')
 
 
@@ -243,3 +244,15 @@ def site_settings_to_registry(context):
     settings.enable_sitemap = site_properties.enable_sitemap
     settings.webstats_js = safe_unicode(
         getattr(site_properties, 'webstats_js', ''))
+
+
+def usergroup_settings_to_registry(context):
+    portal = getToolByName(context, 'portal_url').getPortalObject()
+    site_properties = getattr(
+        getToolByName(context, "portal_properties"), 'site_properties')
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(IUserGroupsSettingsSchema)
+    settings = registry.forInterface(IUserGroupsSettingsSchema)
+
+    settings.many_users = site_properties.many_users
+    settings.many_groups = site_properties.many_groups
