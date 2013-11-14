@@ -18,10 +18,12 @@ from plone.app.controlpanel.interfaces import ILanguageSchema
 from plone.app.controlpanel.interfaces import IMarkupSchema
 from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.interfaces import ISearchSchema
+from plone.app.controlpanel.interfaces import ISiteSchema
 from plone.app.controlpanel.bbb.filter import XHTML_TAGS
 
 from plone.app.controlpanel.interfaces import IMailSchema
 from plone.app.controlpanel.interfaces import ISecuritySchema
+from Products.CMFPlone.utils import safe_unicode
 
 
 class PASUpgradeTest(MigrationTest):
@@ -194,3 +196,24 @@ class PASUpgradeTest(MigrationTest):
                                   getattr(mailhost, 'smtp_pwd', None)))  # noqa
         self.assertEqual(settings.email_from_name, getUtility(ISiteRoot).email_from_name)
         self.assertEqual(settings.email_from_address, getUtility(ISiteRoot).email_from_address)
+
+    def test_site_settings_to_registry(self):
+        site_properties = getattr(
+            getToolByName(self.portal, "portal_properties"), 'site_properties')
+        registry = queryUtility(IRegistry)
+        registry.registerInterface(ISiteSchema)
+        settings = registry.forInterface(ISiteSchema)
+
+        site_title = safe_unicode(getattr(self.portal, 'title', ''))
+        site_description = safe_unicode(getattr(self.portal, 'description', ''))
+        exposeDCMetaTags = site_properties.exposeDCMetaTags
+        enable_sitemap = site_properties.enable_sitemap
+        webstats_js = safe_unicode(
+            getattr(site_properties, 'webstats_js', ''))
+
+        alphas.site_settings_to_registry(self.portal)
+        self.assertEqual(settings.site_title, site_title)
+        self.assertEqual(settings.site_description, site_description)
+        self.assertEqual(settings.exposeDCMetaTags, exposeDCMetaTags)
+        self.assertEqual(settings.enable_sitemap, enable_sitemap)
+        self.assertEqual(settings.webstats_js, webstats_js)

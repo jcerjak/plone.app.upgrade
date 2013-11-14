@@ -78,5 +78,10 @@
           handler=".alphas.mail_settings_to_registry"
           />
 
+      <gs:upgradeStep
+          title="site settings to portal_registry"
+          description="Move site configuration to portal_registry."
+          handler=".alphas.site_settings_to_registry"
+          />
     </gs:upgradeSteps>
 </configure>

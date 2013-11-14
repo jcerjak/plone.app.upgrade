@@ -21,6 +21,7 @@ from plone.app.controlpanel.interfaces import IMarkupSchema
 from plone.app.controlpanel.interfaces import INavigationSchema
 from plone.app.controlpanel.interfaces import ISearchSchema
 from plone.app.controlpanel.interfaces import ISecuritySchema
+from plone.app.controlpanel.interfaces import ISiteSchema
 logger = logging.getLogger('plone.app.upgrade')
 
 
@@ -201,3 +202,19 @@ def mail_settings_to_registry(context):
         getUtility(ISiteRoot).email_from_name)
     settings.email_from_address = getUtility(
         ISiteRoot).email_from_address.encode('ascii', 'ignore')
+
+
+def site_settings_to_registry(context):
+    portal = getToolByName(context, 'portal_url').getPortalObject()
+    site_properties = getattr(
+        getToolByName(context, "portal_properties"), 'site_properties')
+    registry = queryUtility(IRegistry)
+    registry.registerInterface(ISiteSchema)
+    settings = registry.forInterface(ISiteSchema)
+
+    settings.site_title = safe_unicode(getattr(portal, 'title', ''))
+    settings.site_description = safe_unicode(getattr(portal, 'description', ''))
+    settings.exposeDCMetaTags = site_properties.exposeDCMetaTags
+    settings.enable_sitemap = site_properties.enable_sitemap
+    settings.webstats_js = safe_unicode(
+        getattr(site_properties, 'webstats_js', ''))
