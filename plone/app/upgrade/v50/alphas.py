@@ -188,18 +188,27 @@ def security_settings_to_registry(context):
 
 
 def skins_properties_to_registry(context):
-    portal = getToolByName(context, 'portal_url').getPortalObject()
-    skins_props = getAdapter(portal, ISkinsSchema)
-
+    skins_tool = getToolByName(context, 'portal_skins')
+    sprops = getattr(
+        getToolByName(context, "portal_properties"), 'site_properties')
+    jstool = getToolByName(context, 'portal_javascripts')
     registry = queryUtility(IRegistry)
     registry.registerInterface(ISkinsSchema)
     settings = registry.forInterface(ISkinsSchema)
 
-    settings.theme = skins_props.theme
-    settings.mark_special_links = skins_props.mark_special_links
-    settings.ext_links_open_new_window = skins_props.ext_links_open_new_window
-    settings.icon_visibility = skins_props.icon_visibility
-    settings.use_popups = skins_props.use_popups
+    theme = skins_tool.getDefaultSkin()
+    mark_special_links = getattr(sprops, 'mark_special_links', '') == 'true' \
+        and True or False
+    ext_open = getattr(sprops, 'external_links_open_new_window', '') == 'true' \
+        and True or False
+    icon_visibility = getattr(sprops, 'icon_visibility')
+    use_popups = jstool.getResource('popupforms.js').getEnabled()
+
+    settings.theme = theme
+    settings.mark_special_links = mark_special_links
+    settings.ext_links_open_new_window = ext_open
+    settings.icon_visibility = icon_visibility
+    settings.use_popups = use_popups
 
 
 def mail_settings_to_registry(context):

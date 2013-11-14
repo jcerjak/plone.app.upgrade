@@ -79,6 +79,12 @@
           />
 
       <gs:upgradeStep
+          title="skins settings to portal_registry"
+          description="Move skins configuration to portal_registry."
+          handler=".alphas.skins_properties_to_registry"
+          />
+
+      <gs:upgradeStep
           title="site settings to portal_registry"
           description="Move site configuration to portal_registry."
           handler=".alphas.site_settings_to_registry"

@@ -182,16 +182,27 @@ class PASUpgradeTest(MigrationTest):
         self.assertEqual(settings.use_email_as_login, site_properties.use_email_as_login)
 
     def test_skins_properties_to_registry(self):
-        skins_props = getAdapter(self.portal, ISkinsSchema)
+        sprops = getattr(
+            getToolByName(self.portal, "portal_properties"), 'site_properties')
+        skins_tool = getToolByName(self.portal, 'portal_skins')
+        jstool = getToolByName(self.portal, 'portal_javascripts')
         registry = queryUtility(IRegistry)
         settings = registry.forInterface(ISkinsSchema)
-        alphas.skins_properties_to_registry(self.portal)
 
-        self.assertEqual(settings.theme, skins_props.theme)
-        self.assertEqual(settings.mark_special_links, skins_props.mark_special_links)
-        self.assertEqual(settings.ext_links_open_new_window, skins_props.ext_links_open_new_window)
-        self.assertEqual(settings.icon_visibility, skins_props.icon_visibility)
-        self.assertEqual(settings.use_popups, skins_props.use_popups)
+        theme = skins_tool.getDefaultSkin()
+        mark_special_links = getattr(sprops, 'mark_special_links', '') == 'true' \
+            and True or False
+        ext_open = getattr(sprops, 'external_links_open_new_window', '') == 'true' \
+            and True or False
+        icon_visibility = getattr(sprops, 'icon_visibility')
+        use_popups = jstool.getResource('popupforms.js').getEnabled()
+
+        alphas.skins_properties_to_registry(self.portal)
+        self.assertEqual(settings.theme, theme)
+        self.assertEqual(settings.mark_special_links, mark_special_links)
+        self.assertEqual(settings.ext_links_open_new_window, ext_open)
+        self.assertEqual(settings.icon_visibility, icon_visibility)
+        self.assertEqual(settings.use_popups, use_popups)
 
     def test_mail_settings_to_registry(self):
         mailhost = getToolByName(self.portal, 'MailHost')
