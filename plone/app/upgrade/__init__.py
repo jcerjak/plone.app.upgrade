@@ -70,6 +70,11 @@ try:
 except ImportError:
     sys.modules['Products.CMFPlone.UndoTool'] = bbb
 
+try:
+    from Products.CMFPlone import URLTool
+except ImportError:
+    sys.modules['Products.CMFPlone.URLTool'] = bbb
+
 
 try:
     import Products.CMFActionIcons

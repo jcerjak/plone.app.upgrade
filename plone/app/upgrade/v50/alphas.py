@@ -9,7 +9,8 @@ TOOLS_TO_REMOVE = ['portal_actionicons',
                    'portal_calendar',
                    'portal_interface',
                    'portal_discussion',
-                   'portal_undo']
+                   'portal_undo',
+                   'portal_url']
 
 
 def to50alpha1(context):

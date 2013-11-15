@@ -8,6 +8,7 @@ DiscussionTool = SimpleItem
 InterfaceTool = SimpleItem
 SyndicationTool = SimpleItem
 UndoTool = SimpleItem
+URLTool = SimpleItem
 
 
 class IActionIconsTool(Interface):
