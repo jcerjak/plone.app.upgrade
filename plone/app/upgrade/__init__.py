@@ -2,8 +2,8 @@ import pkg_resources
 import sys
 from zope.interface import implements
 from Products.CMFQuickInstallerTool.interfaces import INonInstallable
-from plone.app.upgrade import bbb
 from plone.app.upgrade.utils import alias_module
+import bbb
 
 
 class HiddenProducts(object):
@@ -45,6 +45,10 @@ if 'products.kupu' not in pkg_resources.working_set.by_key:
     import kupu_bbb
     alias_module('Products.kupu.plone.plonelibrarytool', kupu_bbb)
 
+try:
+    from Products.CMFPlone import CalendarTool
+except ImportError:
+    sys.modules['Products.CMFPlone.CalendarTool'] = bbb
 
 try:
     from Products.CMFPlone import DiscussionTool
@@ -52,14 +56,18 @@ except ImportError:
     sys.modules['Products.CMFPlone.DiscussionTool'] = bbb
 
 try:
+    from Products.CMFPlone import InterfaceTool
+except ImportError:
+    sys.modules['Products.CMFPlone.InterfaceTool'] = bbb
+
+try:
     from Products.CMFPlone import SyndicationTool
 except ImportError:
     sys.modules['Products.CMFPlone.SyndicationTool'] = bbb
 
-
 try:
     from Products.CMFPlone import UndoTool
-except ImportError:    
+except ImportError:
     sys.modules['Products.CMFPlone.UndoTool'] = bbb
 
 
@@ -70,3 +78,28 @@ except ImportError:
     alias_module('Products.CMFActionIcons.interfaces', bbb)
     alias_module('Products.CMFActionIcons.interfaces._tools', bbb)
     alias_module('Products.CMFActionIcons.ActionIconsTool', bbb)
+
+try:
+    import Products.CMFPlone.FactoryTool
+except ImportError:
+    try:
+        pkg_resources.get_distribution('Products.ATContentTypes')
+    except:
+        from plone.app.upgrade import atcontentypes_bbb
+        alias_module('Products.CMFPlone.FactoryTool', atcontentypes_bbb)
+    else:
+        from Products.ATContentTypes.tool import factory
+        alias_module('Products.CMFPlone.FactoryTool', factory)
+
+try:
+    import Products.CMFPlone.MetadataTool
+    Products.CMFPlone.MetadataTool  # pyflakes
+except ImportError:
+    try:
+        pkg_resources.get_distribution('Products.ATContentTypes')
+    except:
+        from plone.app.upgrade import atcontentypes_bbb
+        alias_module('Products.CMFPlone.MetadataTool', atcontentypes_bbb)
+    else:
+        from Products.ATContentTypes.tool import metadata
+        alias_module('Products.CMFPlone.MetadataTool', metadata)

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 from Acquisition import aq_inner
 from plone.registry.interfaces import IRegistry
@@ -24,17 +25,35 @@ from plone.app.controlpanel.interfaces import ISecuritySchema
 from plone.app.controlpanel.interfaces import ISiteSchema
 from plone.app.controlpanel.interfaces import ISkinsSchema
 from plone.app.controlpanel.interfaces import IUserGroupsSettingsSchema
+
+
 logger = logging.getLogger('plone.app.upgrade')
+
+TOOLS_TO_REMOVE = ['portal_actionicons',
+                   'portal_calendar',
+                   'portal_interface',
+                   'portal_discussion',
+                   'portal_undo']
 
 
 def to50alpha1(context):
     """4.3 -> 5.0alpha1"""
     loadMigrationProfile(context, 'profile-plone.app.upgrade.v50:to50alpha1')
 
-    # remove obsolete tools
+    # install plone.app.event
     portal = getToolByName(context, 'portal_url').getPortalObject()
-    tools = ['portal_actionicons', 'portal_discussion', 'portal_undo']
-    tools = [t for t in tools if t in portal]
+    qi = getToolByName(portal, 'portal_quickinstaller')
+    if not qi.isProductInstalled('plone.app.event'):
+        qi.installProduct('plone.app.event')
+
+    # migrate first weekday setting
+    portal_calendar = getattr(portal, 'portal_calendar', None)
+    if portal_calendar is not None:
+        first_weekday = getattr(portal.portal_calendar, 'firstweekday', 0)
+        portal.portal_registry['plone.app.event.first_weekday'] = first_weekday
+
+    # remove obsolete tools
+    tools = [t for t in TOOLS_TO_REMOVE if t in portal]
     portal.manage_delObjects(tools)
 
 
