@@ -49,17 +49,21 @@ class TestMigrations_v4_0alpha1(MigrationTest):
 
     def afterSetUp(self):
         self.atool = getToolByName(self.portal, 'portal_actions')
-        self.aitool = getToolByName(self.portal, 'portal_actionicons')
         self.cptool = getToolByName(self.portal, 'portal_controlpanel')
         self.wftool = getToolByName(self.portal, 'portal_workflow')
         self.csstool = getToolByName(self.portal, 'portal_css')
         self.jstool = getToolByName(self.portal, 'portal_javascripts')
 
+        if 'portal_actionicons' not in self.portal:
+            from plone.app.upgrade.bbb import ActionIconsTool
+            self.portal._setObject('portal_actionicons', ActionIconsTool())
+        self.aitool = self.portal.portal_actionicons
+
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         self.setRoles(['Manager'])
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
     def testMigrateActionIcons(self):
         _KNOWN_ACTION_ICONS['object_buttons'].extend(['test_id', 'test2_id'])
@@ -100,15 +104,12 @@ class TestMigrations_v4_0alpha1(MigrationTest):
 
         self.assertEqual(object_buttons.test_id.icon_expr, '')
         self.assertEqual(object_buttons.test2_id.icon_expr, '')
-        self.assertEqual(
-            self.aitool.getActionIcon('object_buttons', 'test_id'),
-            'test.gif')
         # Test it twice
         for i in range(2):
             migrateActionIcons(self.portal)
-            icons = [ic.getActionId() for ic in self.aitool.listActionIcons()]
-            self.failIf('test_id' in icons)
-            self.failIf('test2_id' in icons)
+            icons = [ic._action_id for ic in self.aitool.listActionIcons()]
+            self.assertFalse('test_id' in icons)
+            self.assertFalse('test2_id' in icons)
             self.assertEqual(object_buttons.test_id.icon_expr,
                              'string:$portal_url/test.gif')
             self.assertEqual(object_buttons.test2_id.icon_expr,
@@ -136,13 +137,11 @@ class TestMigrations_v4_0alpha1(MigrationTest):
 
         action = self.cptool.getActionObject('Plone/test_id')
         self.assertEqual(action.getIconExpression(), '')
-        self.assertEqual(self.aitool.getActionIcon('controlpanel', 'test_id'),
-                         'test.gif')
         # Test it twice
         for i in range(2):
             migrateActionIcons(self.portal)
-            icons = [ic.getActionId() for ic in self.aitool.listActionIcons()]
-            self.failIf('test_id' in icons)
+            icons = [ic._action_id for ic in self.aitool.listActionIcons()]
+            self.assertFalse('test_id' in icons)
             self.assertEqual(action.getIconExpression(),
                              'string:$portal_url/test.gif')
 
@@ -238,7 +237,7 @@ class TestMigrations_v4_0alpha1(MigrationTest):
         for i in range(2):
             changeAuthenticatedResourcesCondition(self.portal)
             self.assertEqual(res.getExpression(), '')
-            self.failUnless(res.getAuthenticated())
+            self.assertTrue(res.getAuthenticated())
 
         # make sure it doesn't update it if the expression has been
         # customized
@@ -257,21 +256,24 @@ class TestMigrations_v4_0alpha1(MigrationTest):
     def testReplaceReferencebrowser(self):
         self.setRoles(['Manager'])
         skins_tool = getToolByName(self.portal, 'portal_skins')
+        if 'referencebrowser' not in skins_tool:
+            return
         sels = skins_tool._getSelections()
         for skinname, layer in sels.items():
             layers = layer.split(',')
-            self.failIf('ATReferenceBrowserWidget' in layers)
+            self.assertFalse('ATReferenceBrowserWidget' in layers)
             layers.remove('referencebrowser')
             new_layers = ','.join(layers)
             sels[skinname] = new_layers
 
-        loadMigrationProfile(self.portal, self.profile)
+        from .alphas import threeX_alpha1
+        threeX_alpha1(self.portal)
         setupReferencebrowser(self.portal)
 
         sels = skins_tool._getSelections()
         for skinname, layer in sels.items():
             layers = layer.split(',')
-            self.failUnless('referencebrowser' in layers)
+            self.assertTrue('referencebrowser' in layers)
 
     def testInstallNewDependencies(self):
         self.setRoles(['Manager'])
@@ -279,10 +281,13 @@ class TestMigrations_v4_0alpha1(MigrationTest):
         # it installs (the profile is marked as noninstallable, so we can't
         # ask the quick installer)
         skins_tool = getToolByName(self.portal, 'portal_skins')
+        if 'tinymce' not in skins_tool:
+            # Skip test in new Plones that don't have tinymce to begin with
+            return
         del skins_tool['tinymce']
         for i in range(2):
             loadMigrationProfile(self.portal, self.profile)
-            self.failUnless('tinymce' in skins_tool)
+            self.assertTrue('tinymce' in skins_tool)
             # sleep to avoid a GS log filename collision :-o
             time.sleep(1)
 
@@ -295,7 +300,7 @@ class TestMigrations_v4_0alpha1(MigrationTest):
             # js resource that is new in CMFPlone
             'popupforms.js']
         for e in expected:
-            self.failUnless(e in installedScriptIds, e)
+            self.assertTrue(e in installedScriptIds, e)
 
     def testReplaceSecureMailHost(self):
         portal = self.portal
@@ -310,14 +315,14 @@ class TestMigrations_v4_0alpha1(MigrationTest):
         sm.registerUtility(portal.MailHost, provided=IMailHost)
         migrateMailHost(portal)
         new_mh = portal.MailHost
-        self.failUnlessEqual(new_mh.meta_type, 'Mail Host')
-        self.failUnlessEqual(new_mh.title, 'Fake MailHost')
-        self.failUnlessEqual(new_mh.smtp_host, 'smtp.example.com')
-        self.failUnlessEqual(new_mh.smtp_port, 587)
-        self.failUnlessEqual(new_mh.smtp_uid, 'me')
-        self.failUnlessEqual(new_mh.smtp_pwd, 'secret')
+        self.assertEqual(new_mh.meta_type, 'Mail Host')
+        self.assertEqual(new_mh.title, 'Fake MailHost')
+        self.assertEqual(new_mh.smtp_host, 'smtp.example.com')
+        self.assertEqual(new_mh.smtp_port, 587)
+        self.assertEqual(new_mh.smtp_uid, 'me')
+        self.assertEqual(new_mh.smtp_pwd, 'secret')
         #Force TLS is always false, because SMH has no equivalent option
-        self.failUnlessEqual(new_mh.force_tls, False)
+        self.assertEqual(new_mh.force_tls, False)
 
     def testFolderMigration(self):
         from plone.app.folder.tests.content import create
@@ -326,11 +331,11 @@ class TestMigrations_v4_0alpha1(MigrationTest):
         # create a folder in an unmigrated state & check it's broken...
         folder = create('Folder', self.portal, 'foo', title='Foo')
         reverseMigrate(self.portal)
-        self.failIf(isSaneBTreeFolder(self.portal.foo))
+        self.assertFalse(isSaneBTreeFolder(self.portal.foo))
         # now run the migration step...
         migrateFolders(self.portal)
         folder = self.portal.foo
-        self.failUnless(isSaneBTreeFolder(folder))
+        self.assertTrue(isSaneBTreeFolder(folder))
         self.assertEqual(folder.getId(), 'foo')
         self.assertEqual(folder.Title(), 'Foo')
 
@@ -358,7 +363,7 @@ class TestMigrations_v4_0alpha3(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
     def testJoinActionURL(self):
         self.portal.portal_actions.user.join.url_expr = 'foo'
@@ -374,7 +379,7 @@ class TestMigrations_v4_0alpha5(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
     def testMigrateLargeFolderType(self):
         portal = self.portal
@@ -385,31 +390,31 @@ class TestMigrations_v4_0alpha5(MigrationTest):
             obj = portal[id]
             obj._setPortalTypeName('Large Plone Folder')
             obj.reindexObject()
-            self.assertEquals(obj.portal_type, 'Large Plone Folder')
+            self.assertEqual(obj.portal_type, 'Large Plone Folder')
             # Type falls back to meta_type since there's no
             # Large Plone Folder FTI
-            self.assertEquals(obj.Type(), 'ATFolder')
+            self.assertEqual(obj.Type(), 'ATFolder')
             brain, = catalog(getId=id)
-            self.assertEquals(brain.portal_type, 'Large Plone Folder')
-            self.assertEquals(brain.Type, 'ATFolder')
+            self.assertEqual(brain.portal_type, 'Large Plone Folder')
+            self.assertEqual(brain.Type, 'ATFolder')
         # migrate & check again...
         updateLargeFolderType(self.portal)
         for id in ids:
             obj = portal[id]
-            self.assertEquals(obj.portal_type, 'Folder')
-            self.assertEquals(obj.Type(), 'Folder')
+            self.assertEqual(obj.portal_type, 'Folder')
+            self.assertEqual(obj.Type(), 'Folder')
             brain, = catalog(getId=id)
-            self.assertEquals(brain.portal_type, 'Folder')
-            self.assertEquals(brain.Type, 'Folder')
+            self.assertEqual(brain.portal_type, 'Folder')
+            self.assertEqual(brain.Type, 'Folder')
 
     def testAddRecursiveGroupsPlugin(self):
         acl = getToolByName(self.portal, 'acl_users')
         addRecursiveGroupsPlugin(self.portal)
-        self.failUnless('recursive_groups' in acl)
+        self.assertTrue('recursive_groups' in acl)
         # Now that we have an existing one, let's make sure it's handled
         # properly if this migration is run again.
         addRecursiveGroupsPlugin(self.portal)
-        self.failUnless('recursive_groups' in acl)
+        self.assertTrue('recursive_groups' in acl)
 
     def testClassicThemeResourcesCleanUp(self):
         """Test that the plonetheme.classic product doesn't have any
@@ -421,26 +426,26 @@ class TestMigrations_v4_0alpha5(MigrationTest):
         classictheme = qi['plonetheme.classic']
         classictheme.resources_css = ['something'] # add a random resource
         cleanUpClassicThemeResources(portal)
-        self.failUnlessEqual(classictheme.resources_css, [])
+        self.assertEqual(classictheme.resources_css, [])
 
     def testGetObjPositionInParentIndex(self):
         from plone.app.folder.nogopip import GopipIndex
         catalog = self.portal.portal_catalog
         catalog.delIndex('getObjPositionInParent')
         catalog.addIndex('getObjPositionInParent', 'FieldIndex')
-        self.failIf(isinstance(catalog.Indexes['getObjPositionInParent'],
+        self.assertFalse(isinstance(catalog.Indexes['getObjPositionInParent'],
             GopipIndex))
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless('getObjPositionInParent' in catalog.indexes())
-        self.failUnless(isinstance(catalog.Indexes['getObjPositionInParent'],
+        self.assertTrue('getObjPositionInParent' in catalog.indexes())
+        self.assertTrue(isinstance(catalog.Indexes['getObjPositionInParent'],
             GopipIndex))
 
     def testGetEventTypeIndex(self):
         catalog = self.portal.portal_catalog
         catalog.addIndex('getEventType', 'KeywordIndex')
-        self.failUnless('getEventType' in catalog.indexes())
+        self.assertTrue('getEventType' in catalog.indexes())
         loadMigrationProfile(self.portal, self.profile)
-        self.failIf('getEventType' in catalog.indexes())
+        self.assertFalse('getEventType' in catalog.indexes())
 
 
 class TestMigrations_v4_0beta1(MigrationTest):
@@ -450,7 +455,7 @@ class TestMigrations_v4_0beta1(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
     def testRepositionRecursiveGroupsPlugin(self):
         # Ensure that the recursive groups plugin is moved to the bottom
@@ -484,7 +489,7 @@ class TestMigrations_v4_0beta2(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
     def testCoreContentIconExprCleared(self):
         types = getToolByName(self.portal, 'portal_types')
@@ -503,7 +508,7 @@ class TestMigrations_v4_0beta2(MigrationTest):
         updateIconMetadata(self.portal)
         # The getIcon column should now be empty
         self.assertEqual(catalog(id='front-page')[0].getIcon, '')
-        self.assertEquals(front.modified(), old_modified)
+        self.assertEqual(front.modified(), old_modified)
 
 
 class TestMigrations_v4_0beta4(MigrationTest):
@@ -513,7 +518,7 @@ class TestMigrations_v4_0beta4(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
     def testRemoveLargePloneFolder(self):
         # re-create pre-migration settings
@@ -535,19 +540,19 @@ class TestMigrations_v4_0beta4(MigrationTest):
         for i in xrange(2):
             loadMigrationProfile(self.portal, self.profile)
             removeLargePloneFolder(self.portal)
-            self.failIf('Large Plone Folder' in self.portal.portal_types)
-            self.failIf('Large Plone Folder' in
+            self.assertFalse('Large Plone Folder' in self.portal.portal_types)
+            self.assertFalse('Large Plone Folder' in
                         temp_folder_fti.allowed_content_types)
-            self.failUnless('Folder' in temp_folder_fti.allowed_content_types)
-            self.failIf('Large Plone Folder' in ftool.getFactoryTypes())
-            self.failUnless('Folder' in ftool.getFactoryTypes())
-            self.failIf('Large Plone Folder' in
+            self.assertTrue('Folder' in temp_folder_fti.allowed_content_types)
+            self.assertFalse('Large Plone Folder' in ftool.getFactoryTypes())
+            self.assertTrue('Folder' in ftool.getFactoryTypes())
+            self.assertFalse('Large Plone Folder' in
                         nav_props.parentMetaTypesNotToQuery)
-            self.failUnless('TempFolder' in
+            self.assertTrue('TempFolder' in
                             nav_props.parentMetaTypesNotToQuery)
-            self.failIf('Large Plone Folder' in
+            self.assertFalse('Large Plone Folder' in
                         site_props.typesLinkToFolderContentsInFC)
-            self.failUnless('Folder' in
+            self.assertTrue('Folder' in
                             site_props.typesLinkToFolderContentsInFC)
             # sleep to avoid a GS log filename collision :-o
             time.sleep(1)
@@ -560,7 +565,7 @@ class TestMigrations_v4_0beta5(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
 
 class TestMigrations_v4_0rc1(MigrationTest):
@@ -570,7 +575,7 @@ class TestMigrations_v4_0rc1(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
 class TestMigrations_v4_0(MigrationTest):
 
@@ -579,7 +584,7 @@ class TestMigrations_v4_0(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
 class TestMigrations_v4_0_1(MigrationTest):
 
@@ -588,7 +593,7 @@ class TestMigrations_v4_0_1(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
 class TestMigrations_v4_0_2(MigrationTest):
 
@@ -597,7 +602,7 @@ class TestMigrations_v4_0_2(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
 class TestMigrations_v4_0_3(MigrationTest):
 
@@ -606,7 +611,7 @@ class TestMigrations_v4_0_3(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
 class TestMigrations_v4_0_4(MigrationTest):
 
@@ -615,7 +620,7 @@ class TestMigrations_v4_0_4(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
 class TestMigrations_v4_0_5(MigrationTest):
 
@@ -624,7 +629,7 @@ class TestMigrations_v4_0_5(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
 
 def test_suite():

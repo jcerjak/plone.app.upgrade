@@ -2,11 +2,14 @@ from zope.component import getAdapters, queryMultiAdapter
 from zope.contentprovider.interfaces import IContentProvider
 from zope.viewlet.interfaces import IViewlet
 
-from Products.CMFCore.utils import getToolByName
 from plone.app.upgrade.tests.base import MigrationTest
 from plone.app.upgrade.utils import loadMigrationProfile
+from Products.CMFCore.utils import getToolByName
+from Products.CMFPlone.utils import getFSVersionTuple
 
 import alphas
+
+PLONE5 = getFSVersionTuple()[0] >= 5
 
 
 class TestMigrations_v4_3alpha1(MigrationTest):
@@ -16,11 +19,11 @@ class TestMigrations_v4_3alpha1(MigrationTest):
     def testProfile(self):
         # This tests the whole upgrade profile can be loaded
         loadMigrationProfile(self.portal, self.profile)
-        self.failUnless(True)
+        self.assertTrue(True)
 
     def testAddDisplayPublicationDateInBylineProperty(self):
         pprop = getToolByName(self.portal, 'portal_properties')
-        self.assertEquals(
+        self.assertEqual(
             pprop.site_properties.getProperty('displayPublicationDateInByline'),
             False)
 
@@ -30,9 +33,13 @@ class TestMigrations_v4_3alpha1(MigrationTest):
         ctool.plone_lexicon._pipeline[1] == (Splitter(), CaseNormalizer())
         alphas.upgradeToI18NCaseNormalizer(self.portal.portal_setup)
         self.assertEqual(ctool.plone_lexicon._pipeline[1].__class__.__name__, 'I18NNormalizer')
-        self.failUnless(len(ctool.searchResults(SearchableText="welcome")) > 0)
+        self.assertTrue(len(ctool.searchResults(SearchableText="welcome")) > 0)
 
     def testUpgradeTinyMCE(self):
+        # skip test in new Plones that don't install tinymce to begin with
+        if 'portal_tinymce' not in self.portal:
+            return
+
         alphas.upgradeTinyMCE(self.portal.portal_setup)
         jstool = getToolByName(self.portal, 'portal_javascripts')
         jsresourceids = jstool.getResourceIds()
@@ -63,7 +70,8 @@ class TestMigrations_v4_3alpha1(MigrationTest):
         alphas.upgradePloneAppTheming(self.portal.portal_setup)
 
         registry = getUtility(IRegistry)
-        self.assertRaises(KeyError, registry.forInterface, IThemeSettings)
+        if not PLONE5:
+            self.assertRaises(KeyError, registry.forInterface, IThemeSettings)
 
     def testInstallThemingPreviouslyInstalled(self):
         from plone.app.theming.interfaces import IThemeSettings
@@ -99,11 +107,11 @@ class TestMigrations_v4_3alpha1(MigrationTest):
         # Change title of both, shouldn't be reindexed yet
         portal['accidentally-fall'].title = 'fell'
         portal['num-title'].title = '9 green bottles, hanging on the wall'
-        self.assertEquals(
+        self.assertEqual(
             catalog(id=portal['num-title'].id)[0].Title,
             '10 green bottles, hanging on the wall',
         )
-        self.assertEquals(
+        self.assertEqual(
             catalog(id=portal['accidentally-fall'].id)[0].Title,
             'And if one green bottle should accidentally fall',
         )
@@ -111,11 +119,11 @@ class TestMigrations_v4_3alpha1(MigrationTest):
         # Only the numerical title got reindexed
         portal.portal_setup.runAllImportStepsFromProfile('profile-plone.app.theming:default')
         alphas.reindex_sortable_title(portal.portal_setup)
-        self.assertEquals(
+        self.assertEqual(
             catalog(id=portal['num-title'].id)[0].Title,
             '9 green bottles, hanging on the wall'
         )
-        self.assertEquals(
+        self.assertEqual(
             catalog(id=portal['accidentally-fall'].id)[0].Title,
             'And if one green bottle should accidentally fall',
         )

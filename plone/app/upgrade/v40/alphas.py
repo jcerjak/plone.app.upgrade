@@ -63,7 +63,21 @@ def threeX_alpha1(context):
     loadMigrationProfile(
         context, 'profile-Products.CMFPlone:dependencies',
         steps=('controlpanel', 'jsregistry'))
-
+    # Install plonetheme.classic profile
+    # (if, installed, it will be removed in Plone 5)
+    qi = getToolByName(context, 'portal_quickinstaller')
+    stool = getToolByName(context, 'portal_setup')
+    if 'plonetheme.classic' in qi:
+        stool.runAllImportStepsFromProfile(
+            'profile-plonetheme.classic:default'
+        )
+    # Install archetypes.referencebrowserwidget
+    try:
+        stool.runAllImportStepsFromProfile(
+            'profile-archetypes.referencebrowserwidget:default',
+        )
+    except KeyError:
+        pass
 
 def restoreTheme(context):
     skins = getToolByName(context, 'portal_skins')
@@ -143,9 +157,9 @@ def migrateActionIcons(context):
     categories = atool.objectIds()
 
     for ic in aitool.listActionIcons():
-        cat = ic.getCategory()
-        ident = ic.getActionId()
-        expr = ic.getExpression()
+        cat = ic._category
+        ident = ic._action_id
+        expr = ic._icon_expr_text
         try:
             expr = str(expr)
         except UnicodeEncodeError:
