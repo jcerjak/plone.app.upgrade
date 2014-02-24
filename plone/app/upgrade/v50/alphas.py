@@ -10,7 +10,8 @@ from plone.keyring.keymanager import KeyManager
 from zope.component import getUtility
 from zope.component import getSiteManager
 from zope.component.hooks import getSite
-
+from plone.app.upgrade.v40.alphas import cleanUpToolRegistry
+import logging
 
 logger = logging.getLogger('plone.app.upgrade')
 
@@ -24,9 +25,15 @@ TOOLS_TO_REMOVE = ['portal_actionicons',
 def to50alpha1(context):
     """4.3 -> 5.0alpha1"""
     loadMigrationProfile(context, 'profile-plone.app.upgrade.v50:to50alpha1')
+    portal = getToolByName(context, 'portal_url').getPortalObject()
+
+    # remove obsolete tools
+    tools = [t for t in TOOLS_TO_REMOVE if t in portal]
+    portal.manage_delObjects(tools)
+
+    cleanUpToolRegistry(context)
 
     # migrate properties to portal_registry
-    portal = getToolByName(context, 'portal_url').getPortalObject()
     migrate_registry_settings(portal)
 
     # install plone.app.event
