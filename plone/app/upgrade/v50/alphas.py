@@ -49,21 +49,6 @@ def to50alpha1(context):
     tools = [t for t in TOOLS_TO_REMOVE if t in portal]
     portal.manage_delObjects(tools)
 
-    # upgrade keyring
-    logger.info('upgrading keyring')
-    manager = getUtility(IKeyManager)
-    manager[u'_system'].fill()
-    manager[u'_anon'] = Keyring()
-    manager[u'_anon'].fill()
-    manager[u'_forms'] = Keyring()
-    manager[u'_forms'].fill()
-    logger.info('add keyring to zope root if not done already')
-    app = aq_parent(getSite())
-    sm = getSiteManager(app)
-    if sm.queryUtility(IKeyManager) is None:
-        obj = KeyManager()
-        sm.registerUtility(aq_base(obj), IKeyManager, '')
-
     # update the default view of the Members folder
     migrate_members_default_view(portal)
 
@@ -118,10 +103,12 @@ def upgrade_keyring(context):
 
     manager[u'_system'].fill()
 
-    manager[u'_anon'] = Keyring()
+    if u'_anon' not in manager:
+        manager[u'_anon'] = Keyring()
     manager[u'_anon'].fill()
 
-    manager[u'_forms'] = Keyring()
+    if u'_forms' not in manager:
+        manager[u'_forms'] = Keyring()
     manager[u'_forms'].fill()
 
     logger.info('add keyring to zope root if not done already')
